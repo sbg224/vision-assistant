@@ -7,13 +7,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const filePath = path.resolve(__dirname, '../database/sessions.json');
 
+console.log(`🧠 Fichier de session utilisé : ${filePath}`);
+
 // ✅ Vérifie si le fichier existe, sinon le crée avec un objet vide
 async function ensureFileExists() {
   try {
     await fs.access(filePath);
+    console.log('✅ Fichier sessions.json détecté.');
   } catch {
+    console.warn('⚠️ Fichier sessions.json non trouvé. Création en cours...');
     await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, '{}', 'utf-8');
+    console.log('✅ Fichier sessions.json créé avec un contenu vide.');
   }
 }
 
@@ -22,9 +27,10 @@ export async function getSession(phone) {
     await ensureFileExists();
     const content = await fs.readFile(filePath, 'utf-8');
     const data = JSON.parse(content);
+    console.log(`📥 Session récupérée pour ${phone} :`, data[phone]);
     return data[phone] || null;
   } catch (error) {
-    console.error('Erreur lecture mémoire :', error.message);
+    console.error('❌ Erreur lecture mémoire :', error.message);
     return null;
   }
 }
@@ -42,7 +48,8 @@ export async function updateSession(phone, intent = null, tempData = {}) {
     };
 
     await fs.writeFile(filePath, JSON.stringify(sessions, null, 2));
+    console.log(`💾 Session mise à jour pour ${phone} :`, sessions[phone]);
   } catch (err) {
-    console.error('Erreur écriture mémoire :', err.message);
+    console.error('❌ Erreur écriture mémoire :', err.message);
   }
 }
