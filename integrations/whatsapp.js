@@ -3,10 +3,9 @@ import { runAgent } from '../agent/agent.js';
 
 const router = express.Router();
 
-// ✅ Vérification initiale du Webhook par Meta (GET)
+// ✅ Route GET pour vérification Meta
 router.get('/webhook', (req, res) => {
-  const VERIFY_TOKEN = 'vision123'; // doit être identique à Facebook
-
+  const VERIFY_TOKEN = 'vision123';
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
@@ -20,18 +19,19 @@ router.get('/webhook', (req, res) => {
   }
 });
 
-// ✅ Réception des messages WhatsApp (POST)
+// ✅ Route POST pour messages
 router.post('/webhook', async (req, res) => {
-  console.log('📨 POST reçu de WhatsApp !');
+  console.log('📨 POST reçu de WhatsApp (ou autre)');
   console.log(JSON.stringify(req.body, null, 2));
+
   const msg = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
   const messageText = msg?.text?.body || '';
   const from = msg?.from;
 
   if (messageText && from) {
     const reply = await runAgent(messageText, { from });
-    console.log(`💬 De ${from} : ${messageText}`);
-    console.log(`🤖 Réponse : ${reply}`);
+    console.log(`💬 Message de ${from} : ${messageText}`);
+    console.log(`🤖 Réponse générée : ${reply}`);
   }
 
   res.sendStatus(200);
