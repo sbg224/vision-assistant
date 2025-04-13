@@ -1,5 +1,6 @@
 // utils/dateParser.js
-import chrono from 'chrono-node';
+import * as chrono from 'chrono-node';
+
 
 /**
  * Parse une phrase naturelle comme "demain à 16h" en { date, hour }
