@@ -1,5 +1,5 @@
 import { getResponse } from './rules.js';
-import { getSession, updateSession } from './services/session.file.js';
+import { getSession, updateSession } from '../server/session.file.js';
 
 export async function runAgent(message, context = {}) {
   const phone = context.from;
