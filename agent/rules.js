@@ -1,51 +1,58 @@
-export const runAgent = async (message, context) => {
-  const msg = message.toLowerCase();
+// rules.js
 
-  // Salutations
-  if (['bonjour', 'salut', 'hello', 'yo'].some(greet => msg.includes(greet))) {
-    return '👋 Bonjour ! Je suis votre assistant IA. Je peux vous aider à gérer vos rendez-vous, e-mails, ou répondre à d’autres demandes.';
+/**
+ * Prend un message texte utilisateur et retourne une réponse textuelle.
+ * @param {string} message - Message texte reçu depuis WhatsApp
+ * @returns {string} - Réponse textuelle adaptée
+ */
+export function getResponse(message) {
+  const msg = message.toLowerCase().trim();
+
+  // --- Salutations ---
+  if (['bonjour', 'salut', 'hello', 'yo'].some(word => msg.includes(word))) {
+    return '👋 Bonjour ! Je suis votre assistant IA. Je peux vous aider à planifier un rendez-vous, gérer vos e-mails ou répondre à vos questions.';
   }
 
-  // Rendez-vous
+  // --- Rendez-vous ---
   if (msg.includes('rdv') || msg.includes('rendez-vous')) {
     if (msg.includes('prendre') || msg.includes('planifier')) {
-      return '📅 Très bien, pour quel jour et quelle heure souhaitez-vous planifier ce rendez-vous ?';
+      return '📅 D’accord, pour quel jour et quelle heure souhaitez-vous planifier ce rendez-vous ?';
     }if (msg.includes('annuler')) {
-      return '🗑️ D’accord, quel rendez-vous voulez-vous annuler ? (jour / heure / nom)';
+      return '🗑️ Très bien. Quel rendez-vous souhaitez-vous annuler (jour, heure, ou personne) ?';
     }
-    return '🗓️ Souhaitez-vous planifier, consulter ou annuler un rendez-vous ?';
+      return '🗓️ Souhaitez-vous prendre, consulter ou annuler un rendez-vous ?';
   }
 
-  // E-mails
+  // --- Emails ---
   if (msg.includes('email') || msg.includes('mail')) {
     if (msg.includes('lire') || msg.includes('consulter')) {
-      return '📬 Je vais consulter vos derniers e-mails. Vous voulez que je vous fasse un résumé ?';
+      return '📬 Je vais consulter vos derniers e-mails. Souhaitez-vous un résumé ou un tri ?';
     }if (msg.includes('envoyer')) {
-      return '✉️ Quel est le contenu de l’e-mail et à qui dois-je l’envoyer ?';
+      return '✉️ D’accord. Quel est le contenu de l’e-mail et à qui dois-je l’envoyer ?';
     }
       return '📥 Vous souhaitez consulter, envoyer ou trier vos e-mails ?';
   }
 
-  // Agenda
+  // --- Agenda ---
   if (msg.includes('agenda') || msg.includes('calendrier')) {
-    return '📆 Voici votre agenda. Vous voulez consulter vos événements de la semaine ou en ajouter un ?';
+    return '📆 Vous voulez consulter votre agenda de la semaine ou ajouter un événement ?';
   }
 
-  // Infos générales
-  if (msg.includes('aide') || msg.includes('que peux-tu faire')) {
-    return '🧠 Je peux vous aider à :\n- Gérer vos rendez-vous\n- Lire / envoyer des e-mails\n- Gérer votre agenda\n- Répondre à des questions simples\nDites-moi ce que vous voulez faire !';
+  // --- Infos générales ---
+  if (msg.includes('aide') || msg.includes('capacité') || msg.includes('tu fais quoi')) {
+    return '🧠 Je peux :\n- Gérer vos rendez-vous\n- Gérer vos e-mails\n- Gérer votre agenda\n- Répondre à des questions simples\nDites-moi ce que vous voulez faire.';
   }
 
-  // Test / ping
+  // --- Tests / Debug ---
   if (msg.includes('test')) {
-    return '✅ Le système fonctionne parfaitement. Envoyez-moi une vraie demande 😊';
+    return '✅ Système opérationnel. Envoyez une vraie commande pour continuer.';
   }
 
-  // Au revoir
-  if (msg.includes('merci') || msg.includes('à bientôt') || msg.includes('au revoir')) {
-    return '👋 Avec plaisir ! N’hésitez pas à revenir me parler si vous avez besoin de moi.';
+  // --- Politesse / Fin de conversation ---
+  if (msg.includes('merci') || msg.includes('au revoir') || msg.includes('à bientôt')) {
+    return '👋 Avec plaisir ! N’hésitez pas à revenir si vous avez besoin de moi.';
   }
 
-  // Réponse par défaut
-  return '🤖 Je ne suis pas sûr de comprendre. Vous pouvez me demander un rendez-vous, m’envoyer un e-mail, ou me parler de votre agenda.';
-};
+  // --- Réponse par défaut ---
+  return '🤖 Je n’ai pas compris votre demande. Vous pouvez me dire par exemple : "je veux prendre un rdv", "consulter mes emails", ou simplement "bonjour".';
+}
