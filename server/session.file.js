@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 
-const filePath = new URL('../../sessions.json', import.meta.url);
-
+const filePath = new URL('../database/sessions.json', import.meta.url);
 export async function getSession(phone) {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
