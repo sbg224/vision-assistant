@@ -1,5 +1,6 @@
 import express from 'express';
 import { runAgent } from '../agent/agent.js';
+import fetch from 'node-fetch'; // pour envoyer la réponse
 
 const router = express.Router();
 
@@ -19,9 +20,37 @@ router.get('/webhook', (req, res) => {
   }
 });
 
-// ✅ Route POST pour messages
+// ✅ Fonction pour envoyer une réponse à WhatsApp
+const sendWhatsAppReply = async (to, message) => {
+  try {
+    const phoneNumberId = process.env.PHONE_NUMBER_ID;
+    const token = process.env.WHATSAPP_TOKEN;
+
+    const url = `https://graph.facebook.com/v17.0/${phoneNumberId}/messages`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to,
+        text: { body: message },
+      }),
+    });
+
+    const result = await response.json();
+    console.log('📤 Réponse envoyée à WhatsApp :', result);
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'envoi WhatsApp :', error);
+  }
+};
+
+// ✅ Route POST pour recevoir les messages
 router.post('/webhook', async (req, res) => {
-  console.log('📨 POST reçu de WhatsApp (ou autre)');
+  console.log('📨 POST reçu de WhatsApp !');
   console.log(JSON.stringify(req.body, null, 2));
 
   const msg = req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
@@ -30,8 +59,12 @@ router.post('/webhook', async (req, res) => {
 
   if (messageText && from) {
     const reply = await runAgent(messageText, { from });
+
     console.log(`💬 Message de ${from} : ${messageText}`);
     console.log(`🤖 Réponse générée : ${reply}`);
+
+    // ✅ Envoie la réponse dans WhatsApp automatiquement
+    await sendWhatsAppReply(from, reply);
   }
 
   res.sendStatus(200);
