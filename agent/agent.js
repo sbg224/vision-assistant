@@ -1,24 +1,37 @@
 import { getResponse } from './rules.js';
 import { getSession, updateSession } from '../server/session.file.js';
 
+
 export async function runAgent(message, context = {}) {
   const phone = context.from;
   const session = await getSession(phone);
   const msg = message.toLowerCase().trim();
 
-  // 🧠 Si une intention est en cours (ex : attente d’horaire)
+  // --- Étape 1 : attente de la date ---
+  if (session?.last_intent === 'awaiting_rdv_date') {
+    // Sauvegarder la date reçue
+    const temp = { ...session.temp_data, date: msg };
+    await updateSession(phone, 'awaiting_rdv_hour', temp);
+    return `🕓 Merci. À quelle heure souhaitez-vous ce rendez-vous le ${msg} ?`;
+  }
+
+  // --- Étape 2 : attente de l'heure ---
   if (session?.last_intent === 'awaiting_rdv_hour') {
-    await updateSession(phone, null, {}); // on efface l’intention
-    return `📌 Super, je note votre rendez-vous à ${msg}. Il sera enregistré dans votre Google Agenda (plus tard 😏).`;
+    const date = session.temp_data?.date || '[date inconnue]';
+    const hour = msg;
+
+    // Ici tu pourrais appeler Google Calendar ou autre
+    await updateSession(phone, null, {});
+    return `✅ Rendez-vous confirmé pour le ${date} à ${hour}.`;
   }
 
-  // 🎯 Nouvelle intention détectée
+  // --- Détection nouvelle intention ---
   if (msg.includes('rendez-vous') || msg.includes('rdv')) {
-    await updateSession(phone, 'awaiting_rdv_hour', { step: 1 });
-    return '🗓️ Pour quel jour ou quelle heure souhaitez-vous ce rendez-vous ?';
+    await updateSession(phone, 'awaiting_rdv_date', {});
+    return '📅 Très bien ! Pour quelle date souhaitez-vous prendre un rendez-vous ?';
   }
 
-  // 🤖 Réponse standard via rules.js
+  // --- Réponse standard (fallback) ---
   const baseReply = getResponse(msg);
-  return baseReply || 'Je n’ai pas compris. Essayez : "je veux un rdv" ou "email".';
+  return baseReply || '🤖 Je n’ai pas bien compris. Essayez : "je veux un rendez-vous".';
 }
