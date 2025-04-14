@@ -9,13 +9,10 @@ const filePath = path.resolve(__dirname, '../database/sessions.json');
 
 console.log(`🧠 Fichier de session utilisé : ${filePath}`);
 
-// ✅ Vérifie si le fichier existe, sinon le crée avec un objet vide
 async function ensureFileExists() {
   try {
     await fs.access(filePath);
-    console.log('✅ Fichier sessions.json détecté.');
   } catch {
-    console.warn('⚠️ Fichier sessions.json non trouvé. Création en cours...');
     await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, '{}', 'utf-8');
     console.log('✅ Fichier sessions.json créé avec un contenu vide.');
@@ -48,7 +45,7 @@ export async function updateSession(phone, intent = null, tempData = {}) {
     };
 
     await fs.writeFile(filePath, JSON.stringify(sessions, null, 2));
-    console.log(`💾 Session mise à jour pour ${phone} :`, sessions[phone]);
+    console.log(`💾 Session mise à jour pour ${phone}`);
   } catch (err) {
     console.error('❌ Erreur écriture mémoire :', err.message);
   }
