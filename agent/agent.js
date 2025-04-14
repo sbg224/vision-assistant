@@ -1,4 +1,3 @@
-// agent/agent.js
 import { getResponse } from './rules.js';
 import { getSession, updateSession } from './services/session.file.js';
 import { createCalendarEvent } from '../workflows/calendar.workflow.js';
@@ -21,24 +20,32 @@ export async function runAgent(message, context = {}) {
   const msg = message.toLowerCase().trim();
   const session = await getSession(phone);
 
-  // Cas de session active en attente de date ou heure
+  // Cas de session active en attente de date
   if (session?.last_intent === 'awaiting_rdv_date') {
-    const temp = { ...session.temp_data, date: msg };
-    await updateSession(phone, 'awaiting_rdv_hour', temp);
-    return `🕓 Merci. À quelle heure souhaitez-vous ce rendez-vous le ${msg} ?`;
-  }
-
-  if (session?.last_intent === 'awaiting_rdv_hour') {
-    const date = session.temp_data?.date || '[date inconnue]';
-    const hour = msg;
-    const isValid = !Number.isNaN(new Date(`${date}T${hour}:00`).getTime());
-
-    if (!isValid) {
+    const parsed = parseNaturalDateTime(msg);
+    if (!parsed || !parsed.date) {
       await updateSession(phone, null, {});
-      return '❌ Format de date/heure invalide. Merci de recommencer.';
+      return '❌ Date invalide. Merci de formuler une date compréhensible (ex : "demain", "mardi", "20 avril").';
     }
 
-    const confirmation = await createCalendarEvent(date, hour, phone);
+    const temp = { ...session.temp_data, date: parsed.date };
+    await updateSession(phone, 'awaiting_rdv_hour', temp);
+    return `🕓 Merci. À quelle heure souhaitez-vous ce rendez-vous le ${parsed.date} ?`;
+  }
+
+  // Cas de session active en attente d'heure
+  if (session?.last_intent === 'awaiting_rdv_hour') {
+    const storedDate = session.temp_data?.date;
+    const userHourInput = msg;
+
+    const parsed = parseNaturalDateTime(`${storedDate} ${userHourInput}`);
+
+    if (!parsed || !parsed.date || !parsed.hour) {
+      await updateSession(phone, null, {});
+      return '❌ Format de date ou d’heure invalide. Merci de recommencer.';
+    }
+
+    const confirmation = await createCalendarEvent(parsed.date, parsed.hour, phone);
     await updateSession(phone, null, {});
     return confirmation;
   }
