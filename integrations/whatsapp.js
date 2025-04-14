@@ -1,4 +1,3 @@
-// integrations/whatsapp.js
 import express from 'express';
 import { runAgent } from '../agent/agent.js';
 import fetch from 'node-fetch';
@@ -49,15 +48,19 @@ const sendWhatsAppReply = async (to, message) => {
   }
 };
 
-// ✅ Extraction propre des données du message
+// ✅ Extraction propre des messages (et non des statuts)
 const extractIncomingMessage = (body) => {
   try {
     const entry = body.entry?.[0];
     const change = entry?.changes?.[0];
-    const message = change?.value?.messages?.[0];
+    const value = change?.value;
 
-    if (!message) return null;
+    // 🛑 Ignore les événements sans "messages"
+    if (!value?.messages || !Array.isArray(value.messages)) {
+      return null;
+    }
 
+    const message = value.messages[0];
     return {
       text: message.text?.body || '',
       from: message.from,
@@ -68,7 +71,7 @@ const extractIncomingMessage = (body) => {
   }
 };
 
-// ✅ Réception des messages entrants
+// ✅ Réception des messages
 router.post('/webhook', async (req, res) => {
   console.log('📨 Message reçu de WhatsApp :');
   console.dir(req.body, { depth: null });
@@ -76,8 +79,8 @@ router.post('/webhook', async (req, res) => {
   const incoming = extractIncomingMessage(req.body);
 
   if (!incoming || !incoming.text || !incoming.from) {
-    console.warn('⚠️ Données de message incomplètes ou absentes.');
-    return res.sendStatus(400);
+    console.warn('⚠️ Données de message incomplètes ou non pertinentes (statuts ignorés).');
+    return res.sendStatus(200); // Toujours répondre 200 à WhatsApp
   }
 
   console.log(`💬 Message de ${incoming.from} : ${incoming.text}`);
